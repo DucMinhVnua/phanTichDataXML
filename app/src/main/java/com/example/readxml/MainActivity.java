@@ -36,7 +36,7 @@ import okhttp3.Response;
 public class MainActivity extends AppCompatActivity {
 
     // -------- Khởi tạo database
-    private SQLiteDatabase db;
+    private dbXML db;
 
     // -------- Tên của thẻ cho data
     private static final String TAG_XML_PULL_PARSER = "XML_PULL_PARSER";
@@ -206,10 +206,21 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG_XML_PULL_PARSER, "End element " + nodeName);
                         if("url".equalsIgnoreCase(nodeName))
                         {
+//                            Toast.makeText(this, url, Toast.LENGTH_SHORT).show();
                             Log.e("đây là: ", url);
                             Log.e("đây là: ", ngayThang);
                             Log.e("đây là: ", ten);
                             Log.e("đây là: ", phanTram);
+
+                            // Khoi tao database
+                            db = new dbXML(this, "myDB.sqlite", null, 1);
+
+                            // Tao bang table book
+                            db.QueryData("CREATE TABLE IF NOT EXISTS tblSiteMap (ID INTEGER PRIMARY KEY AUTOINCREMENT, URL varchar(200),  Images byte, Prority float, ChangeFrequency varchar(20), LastChange datetime)");
+
+                            // Insert data cho Table Book
+                            db.QueryData("INSERT INTO tblSiteMap VALUES (null, url, i, phanTram, ten, ngayThang)");
+
                             retBuf.append("Tổng số img là: "+ i + "\n");
                             retBuf.append("----------------------------------------------\r\n\r\n");
                             i = 0;
