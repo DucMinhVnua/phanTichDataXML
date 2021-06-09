@@ -69,6 +69,8 @@ public class MainActivity extends AppCompatActivity {
     private EditText edtURL;
 
     private int i = 0;
+    private String url, phanTram, ten, ngayThang;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -183,6 +185,18 @@ public class MainActivity extends AppCompatActivity {
                             if (nodeName.equals("image:loc")) {
                                 i++;
                             }
+                            if (nodeName.equals("loc")) {
+                                url = value;
+                            }
+                            if (nodeName.equals("lastmod")) {
+                                ngayThang = value;
+                            }
+                            if (nodeName.equals("changefreq")) {
+                                ten = value;
+                            }
+                            if (nodeName.equals("priority")) {
+                                phanTram = value;
+                            }
                             retBuf.append(" : ");
                             retBuf.append(value);
                             Log.e("value", value);
@@ -192,6 +206,10 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG_XML_PULL_PARSER, "End element " + nodeName);
                         if("url".equalsIgnoreCase(nodeName))
                         {
+                            Log.e("đây là: ", url);
+                            Log.e("đây là: ", ngayThang);
+                            Log.e("đây là: ", ten);
+                            Log.e("đây là: ", phanTram);
                             retBuf.append("Tổng số img là: "+ i + "\n");
                             retBuf.append("----------------------------------------------\r\n\r\n");
                             i = 0;
