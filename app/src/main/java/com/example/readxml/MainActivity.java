@@ -1,7 +1,10 @@
 package com.example.readxml;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -17,6 +20,8 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.adapter.adapterXML;
+import com.example.adapter.obj;
 import com.example.database.dbXML;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -32,6 +37,8 @@ import okhttp3.Callback;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+
+import static android.os.Build.ID;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -71,6 +78,11 @@ public class MainActivity extends AppCompatActivity {
     private int i = 0;
     private String url, phanTram, ten, ngayThang;
 
+    RecyclerView rcv;
+    ArrayList<obj> mArrayList;
+    adapterXML mAdapterXML;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,6 +90,38 @@ public class MainActivity extends AppCompatActivity {
 
         // Khởi tạo tất cả bên UI.
         initControls();
+
+        rcv = (RecyclerView) findViewById(R.id.rcv);
+
+        mArrayList = new ArrayList<>();
+        mAdapterXML = new adapterXML(this, mArrayList);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        rcv.setLayoutManager(linearLayoutManager);
+        rcv.setAdapter(mAdapterXML);
+
+        // Khoi tao database
+        db = new dbXML(this, "myDB.sqlite", null, 1);
+
+        // Tao bang table book
+        db.QueryData("CREATE TABLE IF NOT EXISTS tblSiteMap (ID INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "URL varchar(200),  " +
+                "Images byte, " +
+                "Prority float, " +
+                "ChangeFrequency varchar(20), " +
+                "LastChange datetime)");
+
+        // Select data
+        Cursor cursor = db.GetData("SELECT * FROM tblSiteMap");
+        while (cursor.moveToNext()) {
+            int id = cursor.getInt(0);
+            String url = cursor.getString(1);
+            int i = cursor.getInt(2);
+            float phanTram = cursor.getFloat(3);
+            String ten = cursor.getString(4);
+            String ngayThang = cursor.getString(5);
+
+            mArrayList.add(new obj(url, i, phanTram, ten, ngayThang));
+        }
 
         // Khi click button này để bắt đầu phân tích cú pháp url xml bằng XmlPullParser.
         parseXmlUsePullButton.setOnClickListener(new View.OnClickListener() {
@@ -131,6 +175,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
     }
 
     private void sendXmlParseResultToActivityHandler(String xmlParseResult)
@@ -176,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.e(TAG_XML_PULL_PARSER, "Start element " + nodeName);
 
                         if ("loc".equalsIgnoreCase(nodeName) || "lastmod".equalsIgnoreCase(nodeName) || "changefreq".equalsIgnoreCase(nodeName) || "priority".equalsIgnoreCase(nodeName) || "image:loc".equalsIgnoreCase(nodeName)) {
-                            retBuf.append(nodeName);
+                            //retBuf.append(nodeName);
 
                             // ------- Get các text từ xml.
                             String value = String.valueOf(xmlPullParser.nextText());
@@ -197,38 +242,38 @@ public class MainActivity extends AppCompatActivity {
                             if (nodeName.equals("priority")) {
                                 phanTram = value;
                             }
-                            retBuf.append(" : ");
-                            retBuf.append(value);
-                            Log.e("value", value);
-                            retBuf.append("\r\n\r\n");
+//                            retBuf.append(" : ");
+//                            retBuf.append(value);
+//                            Log.e("value", value);
+//                            retBuf.append("\r\n\r\n");
                         }
                     } else if (eventType == XmlPullParser.END_TAG) {
                         Log.d(TAG_XML_PULL_PARSER, "End element " + nodeName);
                         if("url".equalsIgnoreCase(nodeName))
                         {
-//                            Toast.makeText(this, url, Toast.LENGTH_SHORT).show();
                             Log.e("đây là: ", url);
                             Log.e("đây là: ", ngayThang);
                             Log.e("đây là: ", ten);
                             Log.e("đây là: ", phanTram);
 
-                            // Khoi tao database
-                            db = new dbXML(this, "myDB.sqlite", null, 1);
+                            //Insert data cho Table
+                            try {
+                                Log.e("", "insert thành công");
+                                db.QueryData("INSERT INTO tblSiteMap VALUES (null, + '"+url+"', '"+i+"', '"+phanTram+"', '"+ten+"', '"+ngayThang+"')");
+                            }catch (SQLiteException e) {
+                                Log.e("", "insert thất bại");
+                            }
 
-                            // Tao bang table book
-                            db.QueryData("CREATE TABLE IF NOT EXISTS tblSiteMap (ID INTEGER PRIMARY KEY AUTOINCREMENT, URL varchar(200),  Images byte, Prority float, ChangeFrequency varchar(20), LastChange datetime)");
-
-                            // Insert data cho Table Book
-                            db.QueryData("INSERT INTO tblSiteMap VALUES (null, url, i, phanTram, ten, ngayThang)");
-
-                            retBuf.append("Tổng số img là: "+ i + "\n");
-                            retBuf.append("----------------------------------------------\r\n\r\n");
+//                            retBuf.append("Tổng số img là: "+ i + "\n");
+//                            retBuf.append("----------------------------------------------\r\n\r\n");
                             i = 0;
                         }
                     }
                 }
                 eventType = xmlPullParser.next();
             }
+            Intent intent = new Intent(MainActivity.this, MainActivity.class);
+            startActivity(intent);
         }catch(XmlPullParserException ex)
         {
             // --------- Nếu có lỗi thêm thông báo.
